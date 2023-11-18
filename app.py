@@ -19,15 +19,15 @@ styler_width = """
           text-align: -webkit-center;
           max-width: 60rem;
         }
+        .element-container label {
+          display: inline-flex;
+        }
       </style>
 """
 st.markdown(styler_width, unsafe_allow_html=True)
 
 # Titulo
 st.header('Acidentes de trânsito no estado da Bahia - 2017 - 2021')
-
-# Colunas
-col1, col2, col3 = st.columns([3, 1, 1])
 
 # df = pd.read_csv("acidentes_por_ano_ba.csv", on_bad_lines="skip", sep=";")
 dg = pd.read_csv("acidentes_por_sexo_por_ano.csv", on_bad_lines="skip", sep=";")
@@ -42,7 +42,6 @@ dg_vitimas = dg_totais.Valor  # Totais
 # dg_anos = dg.loc[:0, '2017' : '2021'].columns  # Anos
 # dg_vitimas = dg.loc[3, '2017' : '2021'].values  # Totais
 
-# col1.bar_chart(df_t, x='Ano', y='Valor')
 
 grafico = go.Figure(
             data=[
@@ -54,9 +53,9 @@ grafico = go.Figure(
               )
             ],
             layout=go.Layout( 
-              title=go.layout.Title(text='Dados por Ano - Bahia'),
-              xaxis=go.layout.XAxis(title='Ano'),
-              yaxis=go.layout.YAxis(title='Óbitos')
+              title=go.layout.Title(text='Total de Óbitos de acidentes por Ano - Bahia'),
+              xaxis=go.layout.XAxis(title='Anos'),
+              yaxis=go.layout.YAxis(title='Total de Óbitos')
             )
 )
 
@@ -66,19 +65,37 @@ grafico.update_traces(
 )
 
 grafico.update_layout(
+  title_x=0.3,
   xaxis_rangeslider_visible=False,
   template='plotly_white'
 )
 
 st.plotly_chart(grafico)
 
-## Segundo Gráfico
-# dg = pd.read_csv("acidentes_por_sexo_por_ano.csv", on_bad_lines="skip", sep=";")
+## Metricas
+
+# Colunas
+# col1, col2, col3 = st.columns([3, 1, 1])
+col1, col2, col3, col4 = st.columns(4)
 
 total_masc = dg.loc[0, 'Total']
 total_fem = dg.loc[1, 'Total']
 total_ign = dg.loc[2, 'Total']
 
+with col1:
+    st.metric("Total Óbitos ⚰️", total_acidentes)
+
+with col2:
+    st.metric("Total Masc 👨", total_masc)
+
+with col3:
+    st.metric("Total Fem 👩", total_fem)
+
+with col4:
+    st.metric("Total Ign 🧑", total_ign)
+
+
+## Segundo Gráfico
 dg_sav = dg.loc[:2, 'Sexo' : '2021'].melt(id_vars='Sexo', var_name='Ano', value_name='Valor')
 
 # grafico2 = go.Figure()
@@ -111,17 +128,27 @@ dg_sav = dg.loc[:2, 'Sexo' : '2021'].melt(id_vars='Sexo', var_name='Ano', value_
 
 import plotly.express as px
 
-# dx_t = dg.loc[:2, 'Sexo' : '2021'].melt(id_vars='Sexo', var_name='Ano', value_name='Valor')
-
 # Criando o gráfico de barras empilhadas (stacked)
-grafico2 = px.bar(dg_sav, y='Ano', x='Valor', color='Sexo', barmode='stack', orientation="h",
-             title='Dados por Sexo e Ano',
-             labels={'Ano': 'Ano', 'Valor': 'Óbitos por Sexo', 'Sexo': 'Sexo'})
+grafico2 = px.line(x=dg_totais.Ano, y=dg_totais.Valor, ).update_traces(showlegend=True, name="Total").add_traces(
+    
+px.bar(dg_sav, x='Ano', y='Valor', color='Sexo', 
+        barmode='stack', 
+        orientation="v", 
+        labels={'Ano': 'Ano', 'Valor': 'Óbitos por Sexo', 'Sexo': 'Sexo'}
+      ).data
+)
+
+grafico2.update_layout(
+    title='Dados por Sexo e Ano',
+    xaxis_title='Anos',
+    yaxis_title='Total de Óbitos por Sexo'
+)
 
 # Exibindo o gráfico
 st.plotly_chart(grafico2)
 
 dc = dg.loc[:2, 'Sexo' : '2021']
+
 # Definindo as barras do gráfico
 fig = go.Figure()
 
@@ -158,11 +185,28 @@ for sexo in dc['Sexo']:
 # Atualizando layout do gráfico
 fig.update_layout(
     title='Dados por Sexo e Ano',
-    xaxis=dict(title='Óbitos por Sexo'),
-    yaxis=dict(title='Ano'),
+    xaxis=dict(title='Total de Óbitos por Sexo'),
+    yaxis=dict(title='Anos'),
     template='plotly_white',
     barmode='stack'
 )
 
 # Exibindo o gráfico
 st.plotly_chart(fig)
+
+## Quarto gráfico
+# Leitura do arquivo
+dcor = pd.read_csv("acidentes_por_ano_segundo_cor_raca.csv", on_bad_lines="skip", sep=";")
+
+dcor.rename(columns={'Cor/raça' : 'Cor_raca'}, inplace=True)
+
+# Transforma DataFrame
+dcor_t = dcor.loc[:5,  : '2021'].melt(id_vars='Cor_raca', var_name='Ano', value_name='Valor')
+
+qq = px.area(dcor_t, x='Ano', y='Valor', color='Cor_raca', line_group='Cor_raca', category_orders=dict(Cor_raca=['Indígena', 'Amarela', 'Ignorado', 'Preta', 'Branca', 'Parda'] ) )
+
+qq.update_yaxes(tick0=100, dtick=500)
+qq.update_yaxes(range=[None, 2500], maxallowed=3200)
+
+# Exibindo o gráfico
+st.plotly_chart(qq)
