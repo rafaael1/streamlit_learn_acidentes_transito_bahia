@@ -30,9 +30,11 @@ st.markdown(styler_width, unsafe_allow_html=True)
 st.header("Acidentes de trânsito no estado da Bahia - 2017 - 2021")
 
 # Leitura dos arquivos
-df_sex = pd.read_csv("acidentes_por_sexo_por_ano.csv", on_bad_lines="skip", sep=";")
-df_cor = pd.read_csv("acidentes_por_ano_segundo_cor_raca.csv", on_bad_lines="skip", sep=";")
-df_eta = pd.read_csv("acidentes_por_faixa_etaria_ops_por_ano.csv", on_bad_lines="skip", sep=";")
+df_sex = pd.read_csv("assets/acidentes_por_sexo_por_ano.csv", on_bad_lines="skip", sep=";")
+df_cor = pd.read_csv("assets/acidentes_por_ano_segundo_cor_raca.csv", on_bad_lines="skip", sep=";")
+df_eta = pd.read_csv(
+    "assets/acidentes_por_faixa_etaria_ops_por_ano.csv", on_bad_lines="skip", sep=";"
+)
 
 # Tratamento dos dados
 df_cor.rename(columns={"Cor/raça": "Cor_raca"}, inplace=True)
